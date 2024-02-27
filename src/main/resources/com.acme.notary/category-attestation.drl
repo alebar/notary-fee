@@ -1,0 +1,121 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+import java.util.Arrays;
+
+/* ----------- Signature ----------- */
+
+rule "Jeśli typ czynności notarialnej to poświadczenie podpisu, wtedy zapytaj na czym podpis jest składany"
+    when
+        NotarialActType(value == "posw.podpisu")
+    then
+        QuestionCode qCode = QuestionCode.of("signature-attestation-detailed-type");
+        ChoiceQuestion q = ChoiceQuestion.singleChoice(
+          qCode,
+          Phrase.of("Na czym składany jest poświadczany podpis?"),
+          Arrays.asList(
+            Option.of(
+              qCode,
+              OptionCode.of("posw.podpisu.przedmiot-ozn-suma"),
+              Description.of("Na dokumentach, których przedmiot jest oznaczony sumą pieniężną")
+            ),
+            Option.of(
+              qCode,
+              OptionCode.of("posw.podpisu.pelnom-i-inne"),
+              Description.of("Na pełnomocnictwach i innych dokumentach")
+            )
+          )
+        );
+        insert(q);
+end
+
+rule "Jeśli poświadczany podpis składany jest na dokumencie z oznaczoną wartością przedmiotu, wtedy opisz jak naliczyć taksę"
+    when
+        NotarialActType(value == "posw.podpisu")
+        ChosenOption(
+            questionCode.value == "signature-attestation-detailed-type",
+            optionCode.value == "posw.podpisu.przedmiot-ozn-suma"
+        )
+    then
+        insert(
+            Message.create(
+                MessageCode.of("fee-max-rate-cannot-be-calculated"),
+                Phrase.of(
+                  "Maksymalna stawka taksy wynosi 1/10 stawki, jaka należałaby się gdyby podpisywany dokument " +
+                  "był sporządzony w formie aktu, nie więcej jednak niż 300 zł"
+                )
+            )
+        );
+end
+
+rule "Jeśli poświadczany podpis składany jest na dokumencie bez oznaczonej wartości, wtedy ustal stałą stawkę"
+    when
+        NotarialActType(value == "posw.podpisu")
+        ChosenOption(
+            questionCode.value == "signature-attestation-detailed-type",
+            optionCode.value == "posw.podpisu.pelnom-i-inne"
+        )
+    then
+        insert(
+            Fee.builder()
+                .maxRate(20d)
+                .build()
+        );
+end
+
+/* ----------- Alive ----------- */
+
+rule "Jeśli typem czynności jest poświadczenie pozostawania przy życiu, wówczas zapytaj o cel poświadczenia"
+    when
+        NotarialActType(value == "posw.pozostawanie-przy-zyciu")
+    then
+        QuestionCode qCode = QuestionCode.of("alive-attestation-purpose");
+        ChoiceQuestion q = ChoiceQuestion.singleChoice(
+          qCode,
+          Phrase.of("W jakim celu wymagane jest poświadczenie?"),
+          List.of(
+            Option.of(
+              qCode,
+              OptionCode.of("posw.pozostawanie-przy-zyciu.zus"),
+              Description.of("W celu otrzymania emerytury, renty lub innych świadczeń z ubezpieczenia społecznego")
+            ),
+            Option.of(
+              qCode,
+              OptionCode.of("posw.pozostawanie-przy-zyciu.inne"),
+              Description.of("W innym celu")
+            )
+          )
+        );
+        insert(q);
+end
+
+rule "Poświadczenie pozostawania przy życiu jest potrzebne w związku z ubez. społ."
+    when
+        NotarialActType(value == "posw.pozostawanie-przy-zyciu")
+        ChosenOption(
+            questionCode.value == "alive-attestation-purpose",
+            optionCode.value == "posw.pozostawanie-przy-zyciu.zus"
+        )
+    then
+        insert(
+            Fee.builder()
+                .maxRate(5d)
+                .build()
+        );
+end
+
+rule "Poświadczenie pozostawania przy życiu jest potrzebne w innym celu"
+    when
+        NotarialActType(value == "posw.pozostawanie-przy-zyciu")
+        ChosenOption(
+            questionCode.value == "alive-attestation-purpose",
+            optionCode.value == "posw.pozostawanie-przy-zyciu.inne"
+        )
+    then
+        insert(
+            Fee.builder()
+                .maxRate(30d)
+                .build()
+        );
+end

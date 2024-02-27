@@ -1,0 +1,16 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+
+rule "Zmień opis pytania o wartość jeśli czynnością jest sporządzenie protokołu podwyższenia kapitału zakładowego spółki"
+    when
+        NotarialActType(value == "spolki.protokol-podw-kapitalu-zaklad")
+    then
+        insert(
+            TextQuestion.create(
+              QuestionCode.of("value"),
+              Phrase.of("Wartość o jaką został podwyższony kapitał zakładowy")
+            )
+        );
+end

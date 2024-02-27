@@ -1,0 +1,67 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+
+/* ----------- Disposal ----------- */
+rule "Zapytaj czego dotyczy umowa zbycia"
+    when
+        NotarialActType(value == "nieruch.zbycie")
+    then
+        insert(
+            ChoiceQuestion.singleChoice(
+              QuestionCode.of("disposal-detailed-type"),
+              Phrase.of("Czego dotyczy umowa zbycia?")
+            )
+        );
+end
+
+rule "Zdecyduj czy zapytać o wartość, na podstawie przedmiotu umowy zbycia"
+    when
+        NotarialActType(value == "nieruch.zbycie")
+        ChosenOption(
+            questionCode.value == "disposal-detailed-type",
+            optionCode.value in (
+                "nieruch.zbycie.spoldz-wlasn-prawa.lokal",
+                "nieruch.zbycie.spoldz-wlasn-prawa.rozne",
+                "nieruch.zbycie.ekspektatywa"
+            )
+        )
+    then
+        insert(new ShouldCalculateRateFromSubjectValue());
+end
+
+/* ----------- Mortgage ----------- */
+
+rule "Zapytaj czy hipoteka jest ustanawiana w celu zabezpieczenia kredytu mieszkaniowego"
+    when
+        NotarialActType(value == "nieruch.hipoteka")
+    then
+        insert(
+            ChoiceQuestion.yesNoQuestion(
+                QuestionCode.of("is-housing-mortgage"),
+                Phrase.of(
+                "Czy hipoteka jest ustanawiana w celu zabezpieczenia kredytu, udzielonego w celach mieszkaniowych?")
+            )
+        );
+end
+
+rule "Ustaw mnożnik zniżki dla hipoteki mieszkaniowej"
+    when
+        ChosenOption(questionCode.value == "is-housing-mortgage", optionCode.value == "YES")
+    then
+        insert(
+            FeeMaxRateFactor.of(1/4d)
+        );
+end
+
+rule "Ustaw mnożnik zniżki dla hipoteki niemieszkaniowej"
+    when
+        NotarialActType(value == "nieruch.hipoteka")
+        ChosenOption(questionCode.value == "is-housing-mortgage", optionCode.value == "NO")
+    then
+        insert(
+            FeeMaxRateFactor.of(1/2d)
+        );
+end
+

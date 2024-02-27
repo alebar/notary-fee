@@ -1,0 +1,29 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+import java.util.List;
+
+rule "Zapytaj o liczbę czynności, do których upoważnia pełnomocnictwo"
+    when
+        NotarialActType(value == "inne.pelnomocnictwo")
+    then
+        QuestionCode qCode = QuestionCode.of("authorized-acts-count");
+        ChoiceQuestion q = ChoiceQuestion.singleChoice(
+          qCode,
+          Phrase.of("Do ilu czynności upoważnia pełnomocnictwo?"),
+          List.of(
+            Option.of(
+              qCode,
+              OptionCode.of("inne.pelnomocnictwo.jedno"),
+              Description.of("Do dokonania jednej czynności")
+            ),
+            Option.of(
+              qCode,
+              OptionCode.of("inne.pelnomocnictwo.wiele"),
+              Description.of("Do dokonania więcej niż jednej czynności")
+            )
+          )
+        );
+        insert(q);
+end

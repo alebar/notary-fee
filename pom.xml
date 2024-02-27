@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ruletalk</groupId>
+        <artifactId>talk-libs-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.ruletalk.rule-samples</groupId>
+    <artifactId>notary-fee</artifactId>
+    <version>1.0.1</version>
+
+    <properties>
+        <talk-model.version>1.2</talk-model.version>
+        <talk-rules-testing.version>1.0.0-SNAPSHOT</talk-rules-testing.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.drools</groupId>
+                <artifactId>drools-bom</artifactId>
+                <version>9.44.0.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ruletalk</groupId>
+            <artifactId>talk-model</artifactId>
+            <version>${talk-model.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-xml-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-mvel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-tms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ruletalk</groupId>
+            <artifactId>talk-rules-testing</artifactId>
+            <version>${talk-rules-testing.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>talker-repo</id>
+            <url>http://localhost:8082/releases</url>
+        </repository>
+    </distributionManagement>
+
+</project>

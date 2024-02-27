@@ -1,0 +1,101 @@
+package com.acme.notary;
+
+import java.lang.Math;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Optional;
+import com.ruletalk.*;
+import com.acme.notary.*;
+
+function double round(double value) {
+    return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+}
+
+function double calculateMaxRate(Integer v, FeeMaxRateCalculationParams cp) {
+    Integer b = cp.getBase();
+    Double p = cp.getPercent();
+    Integer lb = cp.getLowerBound();
+    Double l = cp.getLimit();
+    double maxRateUnlimited = b + p / 100 * (v - lb);
+    double maxRate = Optional.ofNullable(l)
+                .map(limit -> Math.min(limit, maxRateUnlimited))
+                .orElse(maxRateUnlimited);
+    return round(maxRate);
+}
+
+rule "Wyliczenie maksymalnej stawki taksy notarialnej"
+    when
+        ShouldCalculateRateFromSubjectValue()
+        $cp: FeeMaxRateCalculationParams()
+        SubjectValue($v: value)
+        not FeeMaxRateFactor()
+    then
+        insert(
+            Fee.builder()
+                .maxRate(calculateMaxRate($v, $cp))
+                .build()
+        );
+end
+
+rule "Wyliczenie maksymalnej stawki taksy notarialnej z mnożnikiem"
+    when
+        ShouldCalculateRateFromSubjectValue()
+        $cp: FeeMaxRateCalculationParams()
+        SubjectValue($v: value)
+        FeeMaxRateFactor($factor: value)
+    then
+        double maxRate = calculateMaxRate($v, $cp);
+        double rateWithDiscount = maxRate * $factor;
+        insert(
+            Fee.builder()
+                .maxRate(round(rateWithDiscount))
+                .build()
+        );
+end
+
+rule "Zapytaj czy czynność jest dokonywana między osobami zaliczanymi do I grupy podatkowej"
+    when
+        ShouldCalculateRateFromSubjectValue()
+        not IsNotarialActDoneInFamily()
+        SubjectValue(value >= 2292002)
+        not ChoiceQuestion(code.value == "is-in-family")
+    then
+        insert(
+            ChoiceQuestion.yesNoQuestion(
+              QuestionCode.of("is-in-family"),
+              Phrase.of("Czy czynność jest dokonywana pomiędzy osobami zaliczonymi do I grupy podatkowej?")
+            )
+        );
+end
+
+rule "Dodaj komunikat zawierający wyliczoną stawkę taksy - bez jednostki"
+    when
+        Fee($rate: maxRate != null, measurementUnit == null)
+    then
+        insert(
+            Message.create(
+                MessageCode.of("fee-max-rate-message"),
+                Phrase.of(
+                  String.format(
+                      "Maksymalna stawka taksy notarialnej wynosi %.2f zł.", $rate
+                  )
+                )
+            )
+        );
+end
+
+rule "Dodaj komunikat zawierający wyliczoną stawkę taksy - z jednostką miary"
+    when
+        Fee($rate: maxRate != null, $unit: measurementUnit != null)
+    then
+        insert(
+            Message.create(
+                MessageCode.of("fee-max-rate-message"),
+                Phrase.of(
+                  String.format(
+                      "Maksymalna stawka taksy notarialnej wynosi %.2f zł %s.", $rate, $unit
+                  )
+                )
+            )
+        );
+end

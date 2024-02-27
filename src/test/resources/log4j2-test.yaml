@@ -1,0 +1,22 @@
+Configuration:
+  name: test
+
+  Properties:
+
+  Appenders:
+    Console:
+      name: CONSOLE
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "[%-5level] %d{HH:mm:ss.SSS} [%t] %C{1.} - %msg%n"
+
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        - ref: CONSOLE
+    Logger:
+      - name: com.ruletalk
+        level: debug
+      - name: org.drools
+        level: info

@@ -1,0 +1,43 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+
+rule "Zapytaj o kategorię"
+    when
+        not(ChoiceQuestion(code.value == "category"))
+        not NotarialActType()
+    then
+        insert(
+          ChoiceQuestion.singleChoice(
+            QuestionCode.of("category"),
+            Phrase.of("Kategoria czynności notarialnej")
+          )
+        );
+end
+
+rule "Zapytaj o typ czynności"
+    when
+        ChosenOption(questionCode.value == "category", $c: optionCode != null)
+        not NotarialActType()
+    then
+        insert(
+            ChoiceQuestion.singleChoice(
+              QuestionCode.of("type"),
+              Phrase.of("Typ czynności notarialnej")
+            )
+        );
+end
+
+rule "Zapytaj o wartość przedmiotu czynności notarialnej"
+    when
+        ShouldCalculateRateFromSubjectValue()
+        not SubjectValue()
+    then
+        insert(
+            TextQuestion.create(
+              QuestionCode.of("value"),
+              Phrase.of("Wartość przedmiotu czynności notarialnej")
+            )
+        );
+end

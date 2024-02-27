@@ -1,0 +1,44 @@
+package com.acme.notary;
+
+import com.acme.notary.*
+
+rule "Zdefiniuj typy czynności nie wymagające pytania o wartość"
+    when
+    then
+        insert(
+            new NotarialActTypesNotRelatedToValue(
+                "nieruch.zwolnienie-od-obciazen",
+                "nieruch.zrzeczenie-wlasnosci-lub-prawa-uzytk",
+                "nieruch.zbycie",
+                "testament.testament",
+                "testament.testament-zapis-zwykly",
+                "testament.testament-zapis-wind",
+                "testament.odwolanie",
+                "testament.oswiadczenie-o-spadku",
+                "testament.poswiadczenie-dziedziczenia-gosp-rolne",
+                "testament.poswiadczenie-dziedziczenia-zapis-wind",
+                "testament.protokol-dziedziczenia",
+                "testament.protokol-otwarcia-i-ogloszenia",
+                "testament.zaswiadczenie-powolanie-wykonawcy",
+                "posw.podpisu",
+                "posw.czas-okazania-dok",
+                "posw.zgodnosc-odpisu",
+                "posw.pozostawanie-przy-zyciu",
+                "posw.pozostawanie-w-miejscu",
+                "spoldzielnie.protokol-walne-zgromadz",
+                "spoldzielnie.protokol-zebranie-wspoln",
+                "spolki.protokol-zgromadz-zoo",
+                "spolki.protokol-walne-zgromadz-akcjon",
+                "spolki.protokol-zgromadz-innej-spolki",
+                "spolki.protokol-zmiana-statutu-fund-inw",
+                "spolki.protokol-podw-kapitalu-zaklad",
+                "inne.umowa-majatk-malzenska",
+                "inne.pelnomocnictwo",
+                "inne.protokol-niedojscia-licytacji-do-skutku",
+                "inne.przechowanie-dokumentu-protokol",
+                "inne.przechowanie-dokumentu",
+                "inne.protokol-inny",
+                "inne.doreczenie-oswiadczenia"
+            )
+        );
+end

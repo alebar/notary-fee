@@ -1,0 +1,48 @@
+package com.acme.notary;
+
+import com.acme.notary.*;
+import com.ruletalk.*;
+import java.lang.Integer;
+
+rule "Interpretuj odpowiedź na pytanie o typ czynności"
+    when
+        ChosenOption(questionCode.value == "type", $t: optionCode.value != "other")
+    then
+        insert(NotarialActType.from($t));
+end
+
+rule "Sprawdź czy max stawka powinna być wyliczona z wartości przedmiotu czynności"
+    when
+        NotarialActTypesNotRelatedToValue($constantTypes: types)
+        NotarialActType(value not memberOf $constantTypes)
+    then
+        insert(new ShouldCalculateRateFromSubjectValue());
+end
+
+rule "Interpretuj odpowiedź, że czynność jest dokonywana w rodzinie"
+    when
+        ChosenOption(questionCode.value == "is-in-family", optionCode.value == "YES")
+    then
+        insert(IsNotarialActDoneInFamily.of(Boolean.TRUE));
+end
+
+rule "Interpretuj odpowiedź, że czynność nie jest dokonywana w rodzinie"
+    when
+        ChosenOption(questionCode.value == "is-in-family", optionCode.value == "NO")
+    then
+        insert(IsNotarialActDoneInFamily.of(Boolean.FALSE));
+end
+
+rule "Utwórz obiekt taksy jeśli jest builder"
+    when
+        $b: Fee.Builder()
+    then
+        insert($b.build());
+end
+
+rule "Interpretuj odpowiedź z wartością czynności"
+    when
+        TextAnswer(questionCode.value == "value", $p: phrase)
+    then
+        insert(SubjectValue.of(Integer.valueOf($p.getValue())));
+end
